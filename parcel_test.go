@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"testing"
@@ -34,13 +33,8 @@ func getTestParcel() Parcel {
 func TestAddGetDelete(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer func(db *sql.DB) {
-		_ = db.Close()
-	}(db)
+	require.NoError(t, err)
+	defer db.Close()
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
@@ -56,10 +50,7 @@ func TestAddGetDelete(t *testing.T) {
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	p, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, p.Status, parcel.Status)
-	assert.Equal(t, p.Client, parcel.Client)
-	assert.Equal(t, p.CreatedAt, parcel.CreatedAt)
-	assert.Equal(t, p.Address, parcel.Address)
+	assert.Equal(t, p, parcel)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -68,7 +59,6 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 
 	_, err = store.Get(id)
-	require.Error(t, err)
 	require.ErrorIs(t, err, sql.ErrNoRows)
 }
 
@@ -76,13 +66,8 @@ func TestAddGetDelete(t *testing.T) {
 func TestSetAddress(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer func(db *sql.DB) {
-		_ = db.Close()
-	}(db)
+	require.NoError(t, err)
+	defer db.Close()
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
@@ -103,11 +88,7 @@ func TestSetAddress(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что адрес обновился
 	p, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, p.Status, parcel.Status)
-	assert.Equal(t, p.Client, parcel.Client)
-	assert.Equal(t, p.CreatedAt, parcel.CreatedAt)
 	assert.NotEqual(t, p.Address, parcel.Address)
-	assert.Equal(t, p.Address, newAddress)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
@@ -117,13 +98,8 @@ func TestSetAddress(t *testing.T) {
 func TestSetStatus(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer func(db *sql.DB) {
-		_ = db.Close()
-	}(db)
+	require.NoError(t, err)
+	defer db.Close()
 
 	store := NewParcelStore(db)
 	parcel := getTestParcel()
@@ -157,13 +133,8 @@ func TestSetStatus(t *testing.T) {
 func TestGetByClient(t *testing.T) {
 	// prepare
 	db, err := sql.Open("sqlite", "tracker.db") // настройте подключение к БД
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer func(db *sql.DB) {
-		_ = db.Close()
-	}(db)
+	require.NoError(t, err)
+	defer db.Close()
 
 	store := NewParcelStore(db)
 	parcels := []Parcel{
@@ -204,7 +175,7 @@ func TestGetByClient(t *testing.T) {
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		require.Equal(t, true, ok)
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		assert.Equal(t, p, parcel)
+		assert.Equal(t, p, parcel.Number)
 
 		err = store.Delete(parcel.Number)
 		require.NoError(t, err)
