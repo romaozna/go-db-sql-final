@@ -45,12 +45,13 @@ func TestAddGetDelete(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEqual(t, 0, id)
 
+	parcel.Number = id
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	p, err := store.Get(id)
 	require.NoError(t, err)
-	assert.Equal(t, p, parcel)
+	assert.Equal(t, parcel, p)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
@@ -173,9 +174,11 @@ func TestGetByClient(t *testing.T) {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
 		p, ok := parcelMap[parcel.Number]
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
+		require.Contains(t, storedParcels, p, "Expected parcel not found")
+
 		require.Equal(t, true, ok)
 		// убедитесь, что значения полей полученных посылок заполнены верно
-		assert.Equal(t, p, parcel.Number)
+		require.Equal(t, p, parcel)
 
 		err = store.Delete(parcel.Number)
 		require.NoError(t, err)

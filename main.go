@@ -103,9 +103,7 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	defer func(db *sql.DB) {
-		_ = db.Close()
-	}(db)
+	defer db.Close()
 
 	store := NewParcelStore(db) // создайте объект ParcelStore функцией NewParcelStore
 	service := NewParcelService(store)
