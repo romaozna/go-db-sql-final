@@ -27,7 +27,7 @@ func (s ParcelStore) Add(p Parcel) (int, error) {
 
 	id, err := res.LastInsertId()
 	if err != nil {
-		return 0, fmt.Errorf("error in GET_LAST_INSERT_ID: : %w", err)
+		return 0, fmt.Errorf("error in GET LAST INSERT ID: : %w", err)
 	}
 	// верните идентификатор последней добавленной записи
 	return int(id), nil
@@ -42,7 +42,7 @@ func (s ParcelStore) Get(number int) (Parcel, error) {
 	p := Parcel{}
 	err := res.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 	if err != nil {
-		return p, err
+		return p, fmt.Errorf("error in GET BY ID: : %w", err)
 	}
 	return p, nil
 }
@@ -53,7 +53,7 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 	rows, err := s.db.Query(`SELECT number, client, status, address, created_at FROM parcel WHERE client = :client`,
 		sql.Named("client", client))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error in GET BY CLIENT: : %w", err)
 	}
 	defer rows.Close()
 	// заполните срез Parcel данными из таблицы
@@ -62,12 +62,13 @@ func (s ParcelStore) GetByClient(client int) ([]Parcel, error) {
 		p := Parcel{}
 		err := rows.Scan(&p.Number, &p.Client, &p.Status, &p.Address, &p.CreatedAt)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error in SCAN ROWS: : %w", err)
 		}
 		res = append(res, p)
 	}
-	if err = rows.Err(); err != nil {
-		return res, err
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error in ITERATING ROWS: : %w", err)
 	}
 
 	return res, nil
@@ -78,48 +79,36 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 	_, err := s.db.Exec(`UPDATE parcel SET status = :status WHERE number = :number`,
 		sql.Named("status", status),
 		sql.Named("number", number))
+
 	if err != nil {
-		fmt.Println(err)
-		return err
+		return fmt.Errorf("error in UPDATE STATUS: : %w", err)
 	}
-	return nil
+	return err
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
 	// реализуйте обновление адреса в таблице parcel
 	// менять адрес можно только если значение статуса registered
-	parcel, err := s.Get(number)
+	_, err := s.db.Exec(`UPDATE parcel SET address = :address WHERE number = :number AND status = :status`,
+		sql.Named("address", address),
+		sql.Named("number", number),
+		sql.Named("status", ParcelStatusRegistered))
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error in UPDATE ADDRESS: : %w", err)
 	}
-	if parcel.Status == ParcelStatusRegistered {
-		_, err := s.db.Exec(`UPDATE parcel SET address=:address WHERE number=:number`,
-			sql.Named("address", address),
-			sql.Named("number", number))
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		return nil
-	}
-	return nil
+	return err
 }
 
 func (s ParcelStore) Delete(number int) error {
 	// реализуйте удаление строки из таблицы parcel
 	// удалять строку можно только если значение статуса registered
-	parcel, err := s.Get(number)
+	_, err := s.db.Exec(`DELETE FROM parcel WHERE number = :number AND status = :status`,
+		sql.Named("number", number),
+		sql.Named("status", ParcelStatusRegistered))
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error in DELETE: : %w", err)
 	}
-	if parcel.Status == ParcelStatusRegistered {
-		_, err := s.db.Exec(`DELETE FROM parcel WHERE number = :number`,
-			sql.Named("number", number))
-		if err != nil {
-			fmt.Println(err)
-			return err
-		}
-		return nil
-	}
-	return nil
+	return err
 }

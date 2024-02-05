@@ -110,6 +110,8 @@ func TestSetStatus(t *testing.T) {
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
 	assert.NotEqual(t, 0, id)
+	parcel.Number = id
+	parcel.Status = ParcelStatusSent
 
 	// set status
 	// обновите статус, убедитесь в отсутствии ошибки
@@ -120,11 +122,7 @@ func TestSetStatus(t *testing.T) {
 	// получите добавленную посылку и убедитесь, что статус обновился
 	p, err := store.Get(id)
 	require.NoError(t, err)
-	assert.NotEqual(t, p.Status, parcel.Status)
-	assert.Equal(t, p.Status, ParcelStatusSent)
-	assert.Equal(t, p.Client, parcel.Client)
-	assert.Equal(t, p.CreatedAt, parcel.CreatedAt)
-	assert.Equal(t, p.Address, parcel.Address)
+	assert.Equal(t, p, parcel)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
@@ -172,11 +170,9 @@ func TestGetByClient(t *testing.T) {
 	// check
 	for _, parcel := range storedParcels {
 		// в parcelMap лежат добавленные посылки, ключ - идентификатор посылки, значение - сама посылка
-		p, ok := parcelMap[parcel.Number]
+		p, _ := parcelMap[parcel.Number]
 		// убедитесь, что все посылки из storedParcels есть в parcelMap
 		require.Contains(t, storedParcels, p, "Expected parcel not found")
-
-		require.Equal(t, true, ok)
 		// убедитесь, что значения полей полученных посылок заполнены верно
 		require.Equal(t, p, parcel)
 
