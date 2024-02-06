@@ -83,7 +83,7 @@ func (s ParcelStore) SetStatus(number int, status string) error {
 	if err != nil {
 		return fmt.Errorf("error in UPDATE STATUS: : %w", err)
 	}
-	return err
+	return nil
 }
 
 func (s ParcelStore) SetAddress(number int, address string) error {
