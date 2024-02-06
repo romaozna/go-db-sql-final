@@ -110,5 +110,5 @@ func (s ParcelStore) Delete(number int) error {
 	if err != nil {
 		return fmt.Errorf("error in DELETE: : %w", err)
 	}
-	return err
+	return nil
 }
