@@ -97,7 +97,7 @@ func (s ParcelStore) SetAddress(number int, address string) error {
 	if err != nil {
 		return fmt.Errorf("error in UPDATE ADDRESS: : %w", err)
 	}
-	return err
+	return nil
 }
 
 func (s ParcelStore) Delete(number int) error {
